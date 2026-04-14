@@ -1,0 +1,243 @@
+---
+title: "Frog Data Cleaner"
+date: last-modified
+author: "Georgia Kirkpatrick"
+format: html
+jupyter: python3
+---
+
+# Set up the frog data folder and clean the file names
+1. Create a project folder for the final project if you do not have one already. It does not matter what it is called.
+2. Move this file into the project folder
+3. Create a subfolder within the project folder called `frog_data`.
+4. Copy the frog data files into the `frog_data` folder. You can find the data files [here](https://drive.google.com/drive/folders/1CKTXUeLgw6WPHqTFRlBAn7aMiV5qkbv8?usp=share_link).
+5. Run the code below to clean the data file names. The code will replace spaces with underscores and convert all letters to lowercase. This will make it easier to work with the files in Python later on.
+
+```{python}
+import pandas as pd # Python library for data manipulation and analysis
+import os # Python library that allows your Python scripts to interact with your operating system
+
+directory = './frog_data'
+
+for filename in os.listdir(directory):
+    # Create the target name
+    new_name = filename.replace(' ', '_').replace('-', '_').lower()
+    print('new_name:', new_name)
+
+    # Rename the files if the new name is different from the old name
+    if filename != new_name:
+        # Join the directory path with the filenames
+        old_path = os.path.join(directory, filename)
+        new_path = os.path.join(directory, new_name)
+        
+        os.rename(old_path, new_path)
+        print(f'Renamed: "{filename}" to "{new_name}"')
+```
+
+6. You should now see that the file names in the `frog_data` folder have been cleaned. They should look like this:
+
+frog_data/frog_log_2014_15.xlsx,
+frog_data/frog_log_2015_16.xlsx,
+frog_data/frog_log_2016_17.xlsx,
+frog_data/frog_log_2018_19.xlsx,
+frog_data/frog_log_2019_20.xlsx,
+frog_data/frog_log_2020_21.xlsx,
+frog_data/frog_log_2021_22.xlsx,
+frog_data/frog_log_2022_23.xlsx,
+frog_data/frog_log_2023_24.xlsx,
+frog_data/frog_log_2024_25.xlsx,
+frog_data/frog_log_2025_26.xlsx
+
+# Import the excel files into Python and combine them into a single dataframe
+7. Now that the file names are clean, we can import the excel files into Python.
+
+## 2014-15
+
+```{python}
+frog_dfs_2014_15 = []
+
+frog_dfs_2014_15.append(pd.read_excel('./frog_data/frog_log_2014_15.xlsx', sheet_name="December", nrows=32))
+frog_dfs_2014_15.append(pd.read_excel('./frog_data/frog_log_2014_15.xlsx', sheet_name="January", nrows=30))
+frog_dfs_2014_15.append(pd.read_excel('./frog_data/frog_log_2014_15.xlsx', sheet_name="February", nrows=27))
+frog_dfs_2014_15.append(pd.read_excel('./frog_data/frog_log_2014_15.xlsx', sheet_name="March",  nrows=29))
+```
+
+```{python}
+combined_frog_df_2014_15 = pd.concat(frog_dfs_2014_15, ignore_index=True)
+```
+
+## 2015-16
+
+```{python}
+frog_dfs_2015_16 = []
+
+frog_dfs_2015_16.append(pd.read_excel('./frog_data/frog_log_2015_16.xlsx', sheet_name="December 2015", nrows=34))
+frog_dfs_2015_16.append(pd.read_excel('./frog_data/frog_log_2015_16.xlsx', sheet_name="January 2016", nrows=33))
+frog_dfs_2015_16.append(pd.read_excel('./frog_data/frog_log_2015_16.xlsx', sheet_name="February 2016", nrows=31))
+frog_dfs_2015_16.append(pd.read_excel('./frog_data/frog_log_2015_16.xlsx', sheet_name="March 2016", nrows=32))
+frog_dfs_2015_16.append(pd.read_excel('./frog_data/frog_log_2015_16.xlsx', sheet_name="April 2016", nrows=31))
+```
+
+```{python}
+combined_frog_df_2015_16 = pd.concat(frog_dfs_2015_16, ignore_index=True)
+```
+
+## 2016-17
+
+```{python}
+frog_dfs_2016_17 = []
+
+frog_dfs_2016_17.append(pd.read_excel('./frog_data/frog_log_2016_17.xlsx', sheet_name="November 2016", nrows=31))
+frog_dfs_2016_17.append(pd.read_excel('./frog_data/frog_log_2016_17.xlsx', sheet_name="December 2016", nrows=33))
+frog_dfs_2016_17.append(pd.read_excel('./frog_data/frog_log_2016_17.xlsx', sheet_name="January 2017", nrows=32))
+frog_dfs_2016_17.append(pd.read_excel('./frog_data/frog_log_2016_17.xlsx', sheet_name="February 2017", nrows=29))
+frog_dfs_2016_17.append(pd.read_excel('./frog_data/frog_log_2016_17.xlsx', sheet_name="March 2017",  nrows=32))
+frog_dfs_2016_17.append(pd.read_excel('./frog_data/frog_log_2016_17.xlsx', sheet_name="April 2017",  nrows=31))
+```
+
+```{python}
+combined_frog_df_2016_17 = pd.concat(frog_dfs_2016_17, ignore_index=True)
+```
+
+## 2018-19
+
+```{python}
+frog_dfs_2018_19 = []
+
+frog_dfs_2018_19.append(pd.read_excel('./frog_data/frog_log_2018_19.xlsx', sheet_name="November 2018", nrows=31))
+frog_dfs_2018_19.append(pd.read_excel('./frog_data/frog_log_2018_19.xlsx', sheet_name="December 2018", nrows=31))
+frog_dfs_2018_19.append(pd.read_excel('./frog_data/frog_log_2018_19.xlsx', sheet_name="January 2019", nrows=31))
+frog_dfs_2018_19.append(pd.read_excel('./frog_data/frog_log_2018_19.xlsx', sheet_name="February 2019",nrows=28))
+frog_dfs_2018_19.append(pd.read_excel('./frog_data/frog_log_2018_19.xlsx', sheet_name="March 2019", nrows=31))
+frog_dfs_2018_19.append(pd.read_excel('./frog_data/frog_log_2018_19.xlsx', sheet_name="April 2019", nrows=30))
+```
+
+```{python}
+combined_frog_df_2018_19 = pd.concat(frog_dfs_2018_19, ignore_index=True)
+```
+
+## 2019-20
+
+```{python}
+frog_dfs_2019_20 = []
+
+frog_dfs_2019_20.append(pd.read_excel('./frog_data/frog_log_2019_20.xlsx', sheet_name="November 2019", nrows=31))
+frog_dfs_2019_20.append(pd.read_excel('./frog_data/frog_log_2019_20.xlsx', sheet_name="December 2019", nrows=31))
+frog_dfs_2019_20.append(pd.read_excel('./frog_data/frog_log_2019_20.xlsx', sheet_name="January 2020", nrows=30))
+frog_dfs_2019_20.append(pd.read_excel('./frog_data/frog_log_2019_20.xlsx', sheet_name="February 2020",nrows=28))
+frog_dfs_2019_20.append(pd.read_excel('./frog_data/frog_log_2019_20.xlsx', sheet_name="March 2020", nrows=30))
+frog_dfs_2019_20.append(pd.read_excel('./frog_data/frog_log_2019_20.xlsx', sheet_name="April 2020", nrows=29))
+```
+
+```{python}
+combined_frog_df_2019_20 = pd.concat(frog_dfs_2019_20, ignore_index=True)
+```
+
+## 2020-21
+
+```{python}
+frog_dfs_2020_21 = []
+
+frog_dfs_2020_21.append(pd.read_excel('./frog_data/frog_log_2020_21.xlsx', sheet_name="November 2020", nrows=30))
+frog_dfs_2020_21.append(pd.read_excel('./frog_data/frog_log_2020_21.xlsx', sheet_name="December 2020", nrows=31))
+frog_dfs_2020_21.append(pd.read_excel('./frog_data/frog_log_2020_21.xlsx', sheet_name="January 2021", nrows=31))
+frog_dfs_2020_21.append(pd.read_excel('./frog_data/frog_log_2020_21.xlsx', sheet_name="February 2021",nrows=28))
+frog_dfs_2020_21.append(pd.read_excel('./frog_data/frog_log_2020_21.xlsx', sheet_name="March 2021", nrows=31))
+frog_dfs_2020_21.append(pd.read_excel('./frog_data/frog_log_2020_21.xlsx', sheet_name="April 2021", nrows=30))
+```
+
+```{python}
+combined_frog_df_2020_21 = pd.concat(frog_dfs_2020_21, ignore_index=True)
+```
+
+## 2021-22
+
+```{python}
+frog_dfs_2021_22 = []
+
+frog_dfs_2021_22.append(pd.read_excel('./frog_data/frog_log_2021_22.xlsx', sheet_name="November 2021", nrows=30))
+frog_dfs_2021_22.append(pd.read_excel('./frog_data/frog_log_2021_22.xlsx', sheet_name="December 2021", nrows=32))
+frog_dfs_2021_22.append(pd.read_excel('./frog_data/frog_log_2021_22.xlsx', sheet_name="January 2022", nrows=31))
+frog_dfs_2021_22.append(pd.read_excel('./frog_data/frog_log_2021_22.xlsx', sheet_name="February 2022",nrows=28))
+frog_dfs_2021_22.append(pd.read_excel('./frog_data/frog_log_2021_22.xlsx', sheet_name="March 2022", nrows=31))
+frog_dfs_2021_22.append(pd.read_excel('./frog_data/frog_log_2021_22.xlsx', sheet_name="April 2022", nrows=30))
+```
+
+```{python}
+combined_frog_df_2021_22 = pd.concat(frog_dfs_2021_22, ignore_index=True)
+```
+
+## 2022-23
+
+```{python}
+frog_dfs_2022_23 = []
+
+frog_dfs_2022_23.append(pd.read_excel('./frog_data/frog_log_2022_23.xlsx', sheet_name="November 2022", nrows=32))
+frog_dfs_2022_23.append(pd.read_excel('./frog_data/frog_log_2022_23.xlsx', sheet_name="December 2022", nrows=32))
+frog_dfs_2022_23.append(pd.read_excel('./frog_data/frog_log_2022_23.xlsx', sheet_name="January 2023", nrows=31))
+frog_dfs_2022_23.append(pd.read_excel('./frog_data/frog_log_2022_23.xlsx', sheet_name="February 2023",nrows=28))
+frog_dfs_2022_23.append(pd.read_excel('./frog_data/frog_log_2022_23.xlsx', sheet_name="March 2023", nrows=34))
+frog_dfs_2022_23.append(pd.read_excel('./frog_data/frog_log_2022_23.xlsx', sheet_name="April 2023", nrows=30))
+```
+
+```{python}
+combined_frog_df_2022_23 = pd.concat(frog_dfs_2022_23, ignore_index=True)
+```
+
+## 2023-24
+
+```{python}
+frog_dfs_2023_24 = []
+
+frog_dfs_2023_24.append(pd.read_excel('./frog_data/frog_log_2023_24.xlsx', sheet_name="November 2023", nrows=30))
+frog_dfs_2023_24.append(pd.read_excel('./frog_data/frog_log_2023_24.xlsx', sheet_name="December 2023", nrows=32))
+frog_dfs_2023_24.append(pd.read_excel('./frog_data/frog_log_2023_24.xlsx', sheet_name="January 2024", nrows=31))
+frog_dfs_2023_24.append(pd.read_excel('./frog_data/frog_log_2023_24.xlsx', sheet_name="February 2024", nrows=29))
+frog_dfs_2023_24.append(pd.read_excel('./frog_data/frog_log_2023_24.xlsx', sheet_name="March 2024", nrows=31))
+frog_dfs_2023_24.append(pd.read_excel('./frog_data/frog_log_2023_24.xlsx', sheet_name="April 2024", nrows=30))
+```
+
+```{python}
+combined_frog_df_2023_24 = pd.concat(frog_dfs_2023_24, ignore_index=True)
+```
+
+## 2024-25
+
+```{python}
+frog_dfs_2024_25 = []
+
+frog_dfs_2024_25.append(pd.read_excel('./frog_data/frog_log_2024_25.xlsx', sheet_name="November 2024", nrows=30))
+frog_dfs_2024_25.append(pd.read_excel('./frog_data/frog_log_2024_25.xlsx', sheet_name="December 2024", nrows=31))
+frog_dfs_2024_25.append(pd.read_excel('./frog_data/frog_log_2024_25.xlsx', sheet_name="January 2025", nrows=31))
+frog_dfs_2024_25.append(pd.read_excel('./frog_data/frog_log_2024_25.xlsx', sheet_name="February 2025", nrows=29))
+frog_dfs_2024_25.append(pd.read_excel('./frog_data/frog_log_2024_25.xlsx', sheet_name="March 2025", nrows=32))
+frog_dfs_2024_25.append(pd.read_excel('./frog_data/frog_log_2024_25.xlsx', sheet_name="April 2025", nrows=30))
+```
+
+```{python}
+combined_frog_df_2024_25 = pd.concat(frog_dfs_2024_25, ignore_index=True)
+```
+
+## 2025-26
+
+```{python}
+frog_dfs_2025_26 = []
+
+frog_dfs_2025_26.append(pd.read_excel('./frog_data/frog_log_2025_26.xlsx', sheet_name="November 2025", nrows=30))
+frog_dfs_2025_26.append(pd.read_excel('./frog_data/frog_log_2025_26.xlsx', sheet_name="December 2025", nrows=32))
+frog_dfs_2025_26.append(pd.read_excel('./frog_data/frog_log_2025_26.xlsx', sheet_name="January 2026", nrows=31))
+frog_dfs_2025_26.append(pd.read_excel('./frog_data/frog_log_2025_26.xlsx', sheet_name="February 2026", nrows=30))
+frog_dfs_2025_26.append(pd.read_excel('./frog_data/frog_log_2025_26.xlsx', sheet_name="March 2026", nrows=31))
+frog_dfs_2025_26.append(pd.read_excel('./frog_data/frog_log_2025_26.xlsx', sheet_name="April 2026", nrows=30))
+```
+
+# Combine all the dataframes into a single dataframe
+```{python}
+combined_frog_df_2025_26 = pd.concat(frog_dfs_2025_26, ignore_index=True)
+```
+
+8. You should now have a single dataframe called `combined_frog_df` that contains all the data from the excel files. You can check the first few rows of the dataframe by running the code below.
+```{python}
+combined_frog_df.head()
+
+```
