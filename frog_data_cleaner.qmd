@@ -7,33 +7,8 @@ jupyter: python3
 ---
 
 # Set up the frog data folder and clean the file names
-1. Create a project folder for the final project if you do not have one already. It does not matter what it is called.
-2. Move this file (frog_data_cleaner.qmd) into the project folder.
-3. Download the `frog_data` folder into the project folder you created. The `frog_data` folder contains 12 excel files with data on the red legged frog from 2014 to 2026. Each file contains multiple sheets, one for each month of the frog migration and breeding season. The sheets are named after the month and year they contain data for (e.g., "December 2014", "January 2015", etc.). Each sheet contains a table with the following columns: "Date", "Location", "Species", "Count". The "Date" column contains the date of the observation, the "Location" column contains the location of the observation, the "Species" column contains the species of frog observed, and the "Count" column contains the number of frogs observed.
-4. Run the code below to clean the data file names. The code will replace spaces with underscores and convert all letters to lowercase. This will make it easier to work with the files in Python later on.
-
-```{python}
-import pandas as pd # Python library for data manipulation and analysis
-import os # Python library that allows your Python scripts to interact with your operating system
-
-directory = './frog_data'
-
-for filename in os.listdir(directory):
-    # Create the target name
-    new_name = filename.replace(' ', '_').replace('-', '_').lower()
-    print('new_name:', new_name)
- 
-    # Rename the files if the new name is different from the old name
-    if filename != new_name:
-        # Join the directory path with the filenames
-        old_path = os.path.join(directory, filename)
-        new_path = os.path.join(directory, new_name)
-        
-        os.rename(old_path, new_path)
-        print(f'Renamed: "{filename}" to "{new_name}"')
-```
-
-5. You should now see that the file names in the `frog_data` folder have been cleaned. They should look like this:
+1. Use Git to clone the repository that contains the data and this code file. You can do this by running the command `git clone https://github.com/georgiakirkpatrick/harborton_frog_shuttle.git` in your terminal or command prompt. This will create a new folder called `harborton_frog_shuttle`. It will contain the data and this code file.
+2. The `frog_data` folder contains 12 excel files with data on the red legged frog from 2014 to 2026. Each file contains multiple sheets, one for each month of the frog migration and breeding season. The sheets are named after the month and year they contain data for (e.g., "December 2014", "January 2015", etc.). Each sheet contains a table with the following columns: "Date", "Location", "Species", "Count". The "Date" column contains the date of the observation, the "Location" column contains the location of the observation, the "Species" column contains the species of frog observed, and the "Count" column contains the number of frogs observed. Ensure all raw Excel files from 2014-2026 are in the `/frog_data` folder. File names should follow the `frog_log_YYYY_YY.xlsx` format (no spaces), like this:
 
 frog_data/frog_log_2014_15.xlsx,
 frog_data/frog_log_2015_16.xlsx,
@@ -48,58 +23,73 @@ frog_data/frog_log_2023_24.xlsx,
 frog_data/frog_log_2024_25.xlsx,
 frog_data/frog_log_2025_26.xlsx
 
-# Import the excel files into Python and combine them into a single dataframe
-6. Now that the file names are clean, we can import the excel files into Python. We will specify the number of rows to read for each sheet in each file to exclude monthly total rows.
+# Clean the data
 
- 
+3. Run the code below to clean the data files. This will make it easier to work with the files in Python later on.
+
 ```{python}
+import os
+import pandas as pd
 
-rows_to_import = {
-    'frog_log_2014_15.xlsx': {'December': 32, 'January': 30, 'February': 27, 'March': 29},
-    'frog_log_2015_16.xlsx': {'December 2015': 34, 'January 2016': 33, 'February 2016': 31, 'March 2016': 32, 'April 2016': 31},
-    'frog_log_2016_17.xlsx': {'November 2016': 31, 'December 2016': 33, 'January 2017': 32, 'February 2017': 29, 'March 2017': 32, 'April 2017': 31},
-    'frog_log_2017_18.xlsx': {'November 2017': 31, 'December 2017': 31, 'January 2018': 32, 'February 2018': 32, 'March 2018': 29, 'April 2018': 31},
-    'frog_log_2018_19.xlsx': {'November 2018': 31, 'December 2018': 31, 'January 2019': 31, 'February 2019': 28, 'March 2019': 31, 'April 2019': 30},
-    'frog_log_2019_20.xlsx': {'November 2019': 31, 'December 2019': 31, 'January 2020': 30, 'February 2020': 28, 'March 2020': 30, 'April 2020': 29},
-    'frog_log_2020_21.xlsx': {'November 2020': 30, 'December 2020': 31, 'January 2021': 31, 'February 2021': 28, 'March 2021': 31, 'April 2021': 30},
-    'frog_log_2021_22.xlsx': {'November 2021': 30, 'December 2021': 32, 'January 2022': 31, 'February 2022': 28, 'March 2022': 31, 'April 2022': 30},
-    'frog_log_2022_23.xlsx': {'November 2022': 32, 'December 2022': 32, 'January 2023': 31, 'February 2023': 28, 'March 2023': 34, 'April 2023': 30},
-    'frog_log_2023_24.xlsx': {'November 2023': 30, 'December 2023': 32, 'January 2024': 31, 'February 2024': 29, 'March 2024': 31, 'April 2024': 30},
-    'frog_log_2024_25.xlsx': {'November 2024': 30, 'December 2024': 31, 'January 2025': 31, 'February 2025': 29, 'March 2025': 32, 'April 2025': 30},
-    'frog_log_2025_26.xlsx': {'November 2025': 30, 'December 2025': 32, 'January 2026': 31, 'February 2026': 30, 'March 2026': 31, 'April 2026': 30}
-}
+directory = './frog_data'
+all_data = []
+
+# List all files in the directory
+for filename in os.listdir(directory):
+    # Filter: Must end in .xlsx AND must not be a hidden or temporary lock file
+    if filename.endswith('.xlsx') and not filename.startswith(('.', '~$')):
+        path = os.path.join(directory, filename)
+        
+        try:
+            # Load the workbook
+            sheets = pd.read_excel(path, sheet_name=None)
+            
+            for name, df in sheets.items():
+                name_low = name.lower()
+                # Skip non-data tabs (e.g., Legend, Moon phases)
+                if any(x in name_low for x in ['legend', 'moon', 'sun', 'scratch', 'labels']):
+                    continue
+                
+                # Safety check: skip empty sheets to avoid IndexError
+                if df.empty or len(df.columns) == 0:
+                    continue
+
+                # Standardize Date column and drop non-date rows (totals/notes)
+                first_col = df.columns[0]
+                df[first_col] = pd.to_datetime(df[first_col], errors='coerce')
+                df_clean = df[df[first_col].notna()].copy()
+                
+                if not df_clean.empty:
+                    df_clean['source_file'] = filename
+                    df_clean['sheet_name'] = name
+                    all_data.append(df_clean)
+                    
+        except Exception as e:
+            print(f"Skipping {filename} due to error: {e}")
+
+if all_data:
+    combined_frog_df = pd.concat(all_data, ignore_index=True)
+    print(f"Success! Combined {len(all_data)} sheets.")
+else:
+    print("No data was found. Please check your file paths and names.")
 ```
 
-7. You should now have a single dataframe called `combined_frog_df` that contains all the data from the excel files. You can check the first few rows of the dataframe by running the code below.
+4. You should now have a single dataframe called `combined_frog_df` that contains all the data from the excel files. You can check the first few rows of the dataframe by running the code below.
+
 ```{python}
-all_frog_dfs = []
-
-for file_name, sheets in rows_to_import.items():
-    file_path = os.path.join('./frog_data', file_name)
-    for sheet_name, row_count in sheets.items():
-        df = pd.read_excel(file_path, sheet_name=sheet_name, nrows=row_count)
-        all_frog_dfs.append(df)
-
-combined_frog_df = pd.concat(all_frog_dfs, ignore_index=True)
-
 print(combined_frog_df.head())
 ```
 
-8. You may notice that the column names in the combined dataframe are not consistent. Some columns have leading or trailing spaces, and some have different capitalization. We will clean the column names to make them consistent.
+5. You may notice that the column names in the combined dataframe are not consistent. Some columns have leading or trailing spaces, and some have different capitalization. We will clean the column names to make them consistent.
 
 ```{python}
 # Strip leading and trailing spaces from column names and convert to lowercase
 combined_frog_df.columns = combined_frog_df.columns.str.strip().str.lower()
 # Check the cleaned column names
-print(combined_frog_df.columns)
+pd.Series(combined_frog_df.columns)
 ```
 
-9. Now that the column names are clean, you can check the first few rows of the combined dataframe again to see the cleaned column names.
-```{python}
-print(combined_frog_df.head())
-``` 
-
-10. Define the species mapping to standardize names across years
+6. Define the species mapping to standardize names across years
 ```{python}
 species_mapping = {
     'Bull Frog': 'bull_frog',
@@ -107,11 +97,351 @@ species_mapping = {
     'Pacific Chorus': 'pacific_chorus_frog'
 }
 
-combined_frog_df.columns = [species_mapping.get(col, str(col).lower().replace(' ', '_')) for col in combined_frog_df.columns]
+combined_frog_df.columns = [species_mapping.get(col, str(col).lower().replace(' ', '_').replace('\n', '_').replace('__', '_')) for col in combined_frog_df.columns]
+# Check the cleaned column names
+pd.Series(combined_frog_df.columns)
+```
 
+7. The date column was imported into several columnns. We want to find any cell that matches the YYYY-MM-DD HH:MM:SS pattern. We can use a regular expression (regex) to look across the whole DataFrame. This step may take a minute. Consider a stretch break!
+```{python}
+combined_frog_df = combined_frog_df.groupby(level=0, axis=1).first()
+
+date_pattern = r'\d{4}-\d{2}-\d{2}'
+species_cols = [c for c in combined_frog_df.columns if c != 'date']
+
+date_mask = pd.DataFrame(False, index=combined_frog_df.index, columns=combined_frog_df.columns)
+
+for i in range(len(combined_frog_df.columns)):
+    col_data = combined_frog_df.iloc[:, i]
+    if col_data.dtype == 'object':
+        date_mask.iloc[:, i] = col_data.astype(str).str.contains(date_pattern, na=False)
+
+stray_dates = pd.Series(index=combined_frog_df.index, dtype='datetime64[ns]')
+
+for col in species_cols:
+    found_dates = pd.to_datetime(combined_frog_df[col].where(date_mask[col]), errors='coerce')
+    stray_dates = stray_dates.combine_first(found_dates)
+
+combined_frog_df['date'] = pd.to_datetime(combined_frog_df['date'], errors='coerce')
+
+combined_frog_df['date'] = combined_frog_df['date'].combine_first(stray_dates)
+
+combined_frog_df[species_cols] = combined_frog_df[species_cols].mask(date_mask[species_cols])
+
+print("Data cleaning complete. Duplicate columns merged and dates recovered.")
+```
+
+8. Now we need to identify which columns contain the stray date values. We can look for columns that are mostly empty (since they only contain a few date values) and also look for any columns with "Unnamed" in the title (since these often come from Excel when there are extra columns).
+
+```{python}
+# Identify columns that are more than 95% empty
+missing_threshold = 0.95
+sparse_cols = combined_frog_df.columns[combined_frog_df.isnull().mean() > missing_threshold].tolist()
+
+# Identify columns with "Unnamed" in the title
+unnamed_cols = [c for c in combined_frog_df.columns if "Unnamed" in str(c)]
+
+# Combine these into a list of "problem" columns
+problem_cols = list(set(sparse_cols + unnamed_cols))
+
+print(f"Potential stray columns: {problem_cols}")
+
+# Let's make that a scrollable element
+pd.Series(problem_cols)
+```
+
+9. Before merging, we need to know which existing column these stray values actually belong to. We can check the non-null values in these columns:
+
+```{python}
+for col in problem_cols:
+    # Show the first few non-null values to identify the data type/content
+    sample_data = combined_frog_df[col].dropna().head(5)
+    if not sample_data.empty:
+        print(f"Column '{col}' contains: {sample_data.values}")
+```
+
+10. Once we know where the data belongs (e.g., data in Unnamed: 5 actually belongs in team_leader), we can use fillna to move the data and then delete the old column.
+
+```{python}
+def merge_stray_column(df, stray_col, target_col):
+    # Fill missing values in the target column using the stray column
+    df[target_col] = df[target_col].fillna(df[stray_col])
+    
+    # Drop the stray column now that it's merged
+    df = df.drop(columns=[stray_col])
+    return df
+```
+
+
+We will merge the stray values into the following columns:
+* Date -- we will merge the stray date values into the main date column.
+Data type: datetime
+Example: 2024-01-15 08:30:00
+
+```{python}
+# date
+combined_frog_df = merge_stray_column(combined_frog_df, '/', 'date')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'unnamed:_2', 'date')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'nn', 'date')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'sds', 'date')
+
+first_column = combined_frog_df.columns[0]  # Get the name of the first column]
+combined_frog_df = merge_stray_column(combined_frog_df, first_column, 'date')
+```
+
+* Sunset -- we will merge the stray sunset values into the main sunset column.
+Data type: time
+Example: 17:45
+
+* Civil twilight -- we will merge the stray civil twilight values into the main civil twilight column.
+Data type: time
+Example: 18:15
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'dark', 'civil_twilight')
+```
+
+* Captain -- we will merge the stray captain values into the main captain column.
+Data type: string
+Example: "Shawn/Orems"
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'leaders', 'captain')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'shawn/amber', 'captain')
+
+
+```
+
+* Monitored -- we will merge the stray monitored values into the main monitored column.
+Data type: string
+Example: "Yes", "No", "Y", "N"
+
+* Start time -- we will merge the stray start time values into the main start time column.
+Data type: time
+Example: 18:30
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, ';', 'start_time')
+combined_frog_df = merge_stray_column(combined_frog_df, 'start_time_hh:mm', 'start_time')
+```
+
+* End date -- we will merge the stray end date values into the main end date column.
+Data type: datetime
+Example: 2024-01-15 00:00:00
+
+* End time -- we will merge the stray end time values into the main end time column.
+Data type: time
+Example: 00:30
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'end_time_hh:mm', 'end_time')
+```
+
+* Hours monitored -- we will merge the stray hours monitored values into the main hours monitored column.
+Data type: float
+Example: 6.5
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'hours', 'hours_monitored')
+```
+
+* team hours -- we will merge the stray team hours values into the main team hours column.
+Data type: float
+Example: 13.0
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'team_hrs.', 'team_hours')
+```
+
+* Start temp -- we will merge the stray start temp values into the main start temp column.
+Data type: float
+Example: 48
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'start_temp.', 'start_temp')
+combined_frog_df = merge_stray_column(combined_frog_df, 'temp.', 'start_temp')
+
+```
+
+* End temp -- we will merge the stray end temp values into the main end temp column.
+Data type: float
+Example: 45
+
+* Weather -- we will merge the stray weather values into the main weather column.
+Data type: string
+Example: "Clear", "Cloudy", "Rainy"
+
+* Frog movement columns -- we will merge the stray frog movement values into the main frog movement columns.
+Data type: integer
+Example: 3
+
+* Females assistted down
+
+* Males assisted down
+
+* Unassisted females down
+
+* Unassisted males down
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'unasissted_males_down', 'unassisted_males_down')
+```
+
+* Females assisted up
+
+* Males assisted up
+
+* Unassisted females up
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'unassisted_females__up', 'unassisted_females_up')
+```
+
+* Unassisted males up
+
+* Juveniles assisted up
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'juveniles', 'juveniles_assisted_up')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'juveniles_up', 'juveniles_assisted_up')
+```
+
+* Roadkill females
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'roadkill_females', 'roadkills_female')
+```
+
+* Roadkill males
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'roadkill_males', 'roadkills_male')
+```
+
+* Roadkill unknown
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'roadkills', 'roadkills_unk')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'roadkill_unk', 'roadkills_unk')
+```
+
+* Total frogs down
+
+* Total frogs up
+
+* Total frogs assisted down
+
+* Total frogs assisted up 
+
+* Total live frogs
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'total_frogs', 'total_live_frogs')
+```
+
+* Notes
+
+```{python}
+combined_frog_df = merge_stray_column(combined_frog_df, 'unnamed:_30', 'notes')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'comments', 'notes')
+```
+
+
+```{python}
 combined_frog_df.to_csv('combined_frog_data.csv', index=False)
 ```
 
+11. After merging the stray columns, we can drop any columns that are now completely empty (since they only contained the stray values).
+```{python}
+# Drop columns where every single value is NaN
+combined_frog_df = combined_frog_df.dropna(axis=1, how='all')
+
+# Optional: If you want to see which columns were removed
+print(f"Columns remaining: {len(combined_frog_df.columns)}")
+```
+
+12. Now we look through the remaining columns and remove columns that are unnecessary. 
+
+## Crossing zones and other irrelevant columns
+The following columns contain irrelevant data and can be dropped from the dataframe. We can use the list of crossing zones to identify which columns to drop. We will check if any of these columns are in our dataframe and drop them if they are.
+
+```{python}
+unnecessary_cols = [
+    '``````````````````````````````````````````````````````',
+    '%_moon_visible',
+    ';',
+    '?/',
+    'day_of_week',
+    'baro_pressure',
+    'end_date',
+    'n',
+    'nan',
+    'philip',
+    'shift',
+    'unnamed:_0',
+    'unnamed:_1',
+    'unnamed:_2',
+    'unnamed:_3',
+    'unnamed:_4',
+    'unnamed:_6'
+    'unnamed:_12',
+    'unnamed:_13',
+    'unnamed:_28',
+    'unnamed:_30',
+    'unnamed:_31',
+    'unnamed:_36',
+    'marina_zone_4-_buckets_16-20,_first_bucket_black',
+    'zone_1-_bottom:_stop_sign_to_corner',
+    'zone_2-_corner_to_guardrail/._90°_turn',
+    'zone_5_bottom:_corner-to_stop_sign',
+    'harborton_zone_4-creek_to_1st_driveway',
+    'zone_2-_corner_to_guardrail/_90°__turn',
+    'zone_2-_driveway_to_creek',
+    'harborton_zone_5_top:_above_driveway',
+    'zone_1-_top:_above_1st_driveway',
+    'zone_4-_creek_to_first_driveway',
+    'marina_zone_3-buckets_11-15',
+    'harborton_zone_1-bottom:_stop_sign_to_corner',
+    'marina_zone_5-_last_5_buckets',
+    'zone_5_above_first_driveway',
+    'harborton_zone_2-_corner_to_guardrail/_90°__turn',
+    'zone_4-_guardrail_to_corner_/90°_turn',
+    'zone_5_-bottom:_corner_to_stop_sign',
+    'marina_zone_1-first_5_buckets_from_frog_release_point',
+    'zone_5_top:_above_driveway',
+    'marina_zone_0-nw_of_frog_release_point',
+    'harborton_zone_3-_guardrail_bottom_to_creek',
+    'marina_zone_2-buckets_6-10,_first_bucket_blue',
+    'zone_4-creek_to_1st_driveway',
+    'zone_3-_creek_to_guardrail_bottom',
+    'marina_zone_6-_beyond_the_fence_to_the_doug_fir',
+    'zone_1-bottom:_stop_sign_to_corner',
+    'zone_4-_creek_to_first_criveway',
+    'zone_3-_guardrail_bottom_to_creek',
+    'zone_5_corner-to_stop_sign',
+    'zone_2-_corner_to_guardrail/_90°_turn'
+]
+
+cols_to_drop = [c for c in unnecessary_cols if c in combined_frog_df.columns]
+
+combined_frog_df.drop(columns=cols_to_drop, inplace=True)
+```
+
+Remove any columns that are now completely empty and are missing the column header.
+```{python}
+combined_frog_df = combined_frog_df.iloc[:, 1:]
+```
+
+# Check the final column names and save the cleaned dataframe to a new CSV file for future use.
 ```{python}
 combined_frog_df.columns
+
+combined_frog_df.to_csv('combined_frog_data.csv', index=False)
 ```
