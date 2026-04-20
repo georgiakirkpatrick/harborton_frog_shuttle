@@ -1,0 +1,62 @@
+---
+title: "Pdx Weather Data Cleaning"
+date: last-modified
+author: "Georgia Kirkpatrick"
+format: html
+jupyter: python3
+---
+
+# Set up the frog data folder and clean the file names
+1. The pdx_weather_data file contains weather data for Portland, Oregon, which we will use to analyze how weather conditions affect frog activity. The file includes six columns:
+
+* TAVG (Degrees Fahrenheit) - Average Temperature
+* TMAX (Degrees Fahrenheit) - Maximum Temperature
+* TMIN (Degrees Fahrenheit) - Minimum Temperature
+* PRCP (Inches) - Precipitation
+* SNOW (Inches) - Snowfall
+* SNWD (Inches) - Snow Depth
+
+# Clean the data
+2. We will start by loading the data into a pandas DataFrame and inspecting it for any issues such as missing values, incorrect data types, or outliers.
+```{python}
+import pandas as pd
+# Load the data
+weather_df = pd.read_csv('pdx_weather_data.csv', header = 1)
+# Inspect the first few rows of the data
+weather_df.head()
+```
+
+3. Let's change the column names to be more descriptive and consistent with our frog data. We will also convert the date column to a datetime format for easier analysis later on.
+```{python}
+# Rename columns for consistency
+weather_df.rename(columns={
+    'Date': 'date', 
+    'TAVG (Degrees Fahrenheit)': 'avg_temp_f', 
+    'TMAX (Degrees Fahrenheit)': 'max_temp_f', 
+    'TMIN (Degrees Fahrenheit)': 'min_temp_f', 
+    'PRCP (Inches)': 'precip_in', 
+    'SNOW (Inches)': 'snow_in', 
+    'SNWD (Inches)': 'snow_depth_in'
+}, inplace=True)
+# Convert the date column to datetime format
+weather_df['date'] = pd.to_datetime(weather_df['date'])
+# Check the data types to confirm the conversion worked
+weather_df.dtypes
+```
+
+4. Next, we will join the weather data with our cleaned frog data on the date column. This will allow us to analyze how weather conditions affect frog activity on a daily basis.
+```{python}
+# Load the cleaned frog data
+frog_df = pd.read_csv('combined_frog_data.csv')
+# Convert the date column in the frog data to datetime format
+frog_df['date'] = pd.to_datetime(frog_df['date'])
+# Merge the weather data with the frog data on the date column
+combined_df = pd.merge(frog_df, weather_df, on='date', how='left')
+# Inspect the first few rows of the combined data
+combined_df.head()
+```
+
+5. Finally, we will save the combined data to a new CSV file for use in our analysis.
+```{python}
+combined_df.to_csv('frog_weather_data.csv', index=False)
+``` 

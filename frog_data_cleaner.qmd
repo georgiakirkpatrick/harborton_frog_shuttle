@@ -85,8 +85,7 @@ print(combined_frog_df.head())
 ```{python}
 # Strip leading and trailing spaces from column names and convert to lowercase
 combined_frog_df.columns = combined_frog_df.columns.str.strip().str.lower()
-# Check the cleaned column names
-pd.Series(combined_frog_df.columns)
+
 ```
 
 6. Define the species mapping to standardize names across years
@@ -98,11 +97,10 @@ species_mapping = {
 }
 
 combined_frog_df.columns = [species_mapping.get(col, str(col).lower().replace(' ', '_').replace('\n', '_').replace('__', '_')) for col in combined_frog_df.columns]
-# Check the cleaned column names
-pd.Series(combined_frog_df.columns)
 ```
 
-7. The date column was imported into several columnns. We want to find any cell that matches the YYYY-MM-DD HH:MM:SS pattern. We can use a regular expression (regex) to look across the whole DataFrame. This step may take a minute. Consider a stretch break!
+7. The date column was imported into several columnns. We want to find any cell that matches the YYYY-MM-DD HH:MM:SS pattern. We can use a regular expression (regex) to look across the whole DataFrame.
+
 ```{python}
 combined_frog_df = combined_frog_df.groupby(level=0, axis=1).first()
 
@@ -145,9 +143,6 @@ unnamed_cols = [c for c in combined_frog_df.columns if "Unnamed" in str(c)]
 problem_cols = list(set(sparse_cols + unnamed_cols))
 
 print(f"Potential stray columns: {problem_cols}")
-
-# Let's make that a scrollable element
-pd.Series(problem_cols)
 ```
 
 9. Before merging, we need to know which existing column these stray values actually belong to. We can check the non-null values in these columns:
@@ -172,8 +167,8 @@ def merge_stray_column(df, stray_col, target_col):
     return df
 ```
 
+11. We will merge the stray values into the columns they belong in:
 
-We will merge the stray values into the following columns:
 * Date -- we will merge the stray date values into the main date column.
 Data type: datetime
 Example: 2024-01-15 08:30:00
@@ -188,13 +183,9 @@ combined_frog_df = merge_stray_column(combined_frog_df, 'nn', 'date')
 
 combined_frog_df = merge_stray_column(combined_frog_df, 'sds', 'date')
 
-first_column = combined_frog_df.columns[0]  # Get the name of the first column]
+first_column = combined_frog_df.columns[0] # The first column has an empty string as a name, so we can use its index to refer to it.
 combined_frog_df = merge_stray_column(combined_frog_df, first_column, 'date')
 ```
-
-* Sunset -- we will merge the stray sunset values into the main sunset column.
-Data type: time
-Example: 17:45
 
 * Civil twilight -- we will merge the stray civil twilight values into the main civil twilight column.
 Data type: time
@@ -212,13 +203,7 @@ Example: "Shawn/Orems"
 combined_frog_df = merge_stray_column(combined_frog_df, 'leaders', 'captain')
 
 combined_frog_df = merge_stray_column(combined_frog_df, 'shawn/amber', 'captain')
-
-
 ```
-
-* Monitored -- we will merge the stray monitored values into the main monitored column.
-Data type: string
-Example: "Yes", "No", "Y", "N"
 
 * Start time -- we will merge the stray start time values into the main start time column.
 Data type: time
@@ -228,10 +213,6 @@ Example: 18:30
 combined_frog_df = merge_stray_column(combined_frog_df, ';', 'start_time')
 combined_frog_df = merge_stray_column(combined_frog_df, 'start_time_hh:mm', 'start_time')
 ```
-
-* End date -- we will merge the stray end date values into the main end date column.
-Data type: datetime
-Example: 2024-01-15 00:00:00
 
 * End time -- we will merge the stray end time values into the main end time column.
 Data type: time
@@ -249,7 +230,7 @@ Example: 6.5
 combined_frog_df = merge_stray_column(combined_frog_df, 'hours', 'hours_monitored')
 ```
 
-* team hours -- we will merge the stray team hours values into the main team hours column.
+* Team hours -- we will merge the stray team hours values into the main team hours column.
 Data type: float
 Example: 13.0
 
@@ -264,44 +245,35 @@ Example: 48
 ```{python}
 combined_frog_df = merge_stray_column(combined_frog_df, 'start_temp.', 'start_temp')
 combined_frog_df = merge_stray_column(combined_frog_df, 'temp.', 'start_temp')
-
 ```
-
-* End temp -- we will merge the stray end temp values into the main end temp column.
-Data type: float
-Example: 45
 
 * Weather -- we will merge the stray weather values into the main weather column.
 Data type: string
 Example: "Clear", "Cloudy", "Rainy"
 
-* Frog movement columns -- we will merge the stray frog movement values into the main frog movement columns.
+Frog movement columns -- we will merge the stray frog movement values into the main frog movement columns.
 Data type: integer
 Example: 3
-
-* Females assistted down
-
-* Males assisted down
-
-* Unassisted females down
 
 * Unassisted males down
 
 ```{python}
 combined_frog_df = merge_stray_column(combined_frog_df, 'unasissted_males_down', 'unassisted_males_down')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'unassisted_males_up', 'unassisted_males_up')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'unassisted_males_down', 'males_unassisted_down')
 ```
-
-* Females assisted up
-
-* Males assisted up
 
 * Unassisted females up
 
 ```{python}
 combined_frog_df = merge_stray_column(combined_frog_df, 'unassisted_females__up', 'unassisted_females_up')
-```
 
-* Unassisted males up
+combined_frog_df = merge_stray_column(combined_frog_df, 'unassisted_females_up', 'females_unassisted_up')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'unassisted_females_down', 'females_unassisted_down')
+```
 
 * Juveniles assisted up
 
@@ -331,18 +303,14 @@ combined_frog_df = merge_stray_column(combined_frog_df, 'roadkills', 'roadkills_
 combined_frog_df = merge_stray_column(combined_frog_df, 'roadkill_unk', 'roadkills_unk')
 ```
 
-* Total frogs down
-
-* Total frogs up
-
-* Total frogs assisted down
-
-* Total frogs assisted up 
-
 * Total live frogs
 
 ```{python}
 combined_frog_df = merge_stray_column(combined_frog_df, 'total_frogs', 'total_live_frogs')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'frogs_up', 'total_frogs_up')
+
+combined_frog_df = merge_stray_column(combined_frog_df, 'frogs_down', 'total_frogs_down')
 ```
 
 * Notes
@@ -354,20 +322,16 @@ combined_frog_df = merge_stray_column(combined_frog_df, 'comments', 'notes')
 ```
 
 
-```{python}
-combined_frog_df.to_csv('combined_frog_data.csv', index=False)
-```
-
-11. After merging the stray columns, we can drop any columns that are now completely empty (since they only contained the stray values).
+12. After merging the stray columns, we can drop any columns that are now completely empty (since they only contained the stray values).
 ```{python}
 # Drop columns where every single value is NaN
 combined_frog_df = combined_frog_df.dropna(axis=1, how='all')
 
-# Optional: If you want to see which columns were removed
+# See which columns were removed
 print(f"Columns remaining: {len(combined_frog_df.columns)}")
 ```
 
-12. Now we look through the remaining columns and remove columns that are unnecessary. 
+13. Now we look through the remaining columns and remove columns that are unnecessary. 
 
 ## Crossing zones and other irrelevant columns
 The following columns contain irrelevant data and can be dropped from the dataframe. We can use the list of crossing zones to identify which columns to drop. We will check if any of these columns are in our dataframe and drop them if they are.
@@ -434,14 +398,237 @@ cols_to_drop = [c for c in unnecessary_cols if c in combined_frog_df.columns]
 combined_frog_df.drop(columns=cols_to_drop, inplace=True)
 ```
 
-Remove any columns that are now completely empty and are missing the column header.
+14. Update column data types and adjust the order of columns
+
+Date columns should be in datetime format, time columns should be in HH:MM format, and numeric columns should be in integer or float format.
+
 ```{python}
-combined_frog_df = combined_frog_df.iloc[:, 1:]
+#Date column
+
+# Convert to datetime while 'coercing' errors (turns 'Sunday' into NaT)
+combined_frog_df['date'] = pd.to_datetime(combined_frog_df['date'], errors='coerce')
+
+# Extract just the date
+combined_frog_df['date'] = combined_frog_df['date'].dt.date
 ```
 
-# Check the final column names and save the cleaned dataframe to a new CSV file for future use.
 ```{python}
-combined_frog_df.columns
+# Sunset column
 
+# Convert to numeric and clean up the format as a 4-digit string
+combined_frog_df['sunset'] = pd.to_numeric(combined_frog_df['sunset'], errors='coerce')
+combined_frog_df['sunset'] = (
+    combined_frog_df['sunset']
+    .fillna(0)
+    .astype(int)
+    .astype(str)
+    .str.zfill(4)
+)
+
+# Insert the colon using string slicing
+time_strings = (
+    combined_frog_df['sunset'].str[:2] + 
+    ':' + 
+    combined_frog_df['sunset'].str[2:]
+)
+
+# Convert to datetime and format as a string 'HH:MM'
+combined_frog_df['sunset'] = pd.to_datetime(
+    time_strings, 
+    format='%H:%M', 
+    errors='coerce'
+).dt.strftime('%H:%M')
+
+# Revert the '00:00' placeholders (which were originally NaN) back to None
+# Note: We compare against the string '00:00' now
+combined_frog_df.loc[combined_frog_df['sunset'] == '00:00', 'sunset'] = None
+```
+
+```{python}
+# Civil twilight column
+
+# Convert to numeric and clean up the format as a 4-digit string
+combined_frog_df['civil_twilight'] = pd.to_numeric(combined_frog_df['civil_twilight'], errors='coerce')
+combined_frog_df['civil_twilight'] = (
+    combined_frog_df['civil_twilight']
+    .fillna(0)
+    .astype(int)
+    .astype(str)
+    .str.zfill(4)
+)
+
+# Insert the colon using string slicing
+time_strings = (
+    combined_frog_df['civil_twilight'].str[:2] + 
+    ':' + 
+    combined_frog_df['civil_twilight'].str[2:]
+)
+
+# Convert to datetime and format as a string 'HH:MM'
+combined_frog_df['civil_twilight'] = pd.to_datetime(
+    time_strings, 
+    format='%H:%M', 
+    errors='coerce'
+).dt.strftime('%H:%M')
+
+# Revert the '00:00' placeholders (which were originally NaN) back to None
+# Note: We compare against the string '00:00' now
+combined_frog_df.loc[combined_frog_df['civil_twilight'] == '00:00', 'civil_twilight'] = None
+```
+
+```{python}
+# Start time column
+
+# Convert to string and strip the '.0' from the end of numbers
+combined_frog_df['start_time'] = (
+    combined_frog_df['start_time']
+    .astype(str)
+    .str.replace(r'\.0$', '', regex=True)
+    .str.strip()
+)
+
+# For 3 or 4 digit numbers (like 739 or 1939), ensure they are padded with a leading zero
+# and formatted with a colon (e.g., '07:39' or '19:39')
+mask_military = combined_frog_df['start_time'].str.match(r'^\d{3,4}$')
+combined_frog_df.loc[mask_military, 'start_time'] = (
+    combined_frog_df.loc[mask_military, 'start_time']
+    .str.zfill(4)
+    .str.replace(r'(\d{2})(\d{2})', r'\1:\2', regex=True)
+)
+
+# Convert and format in one step to avoid the AttributeError
+combined_frog_df['start_time'] = pd.to_datetime(combined_frog_df['start_time'], errors='coerce').dt.strftime('%H:%M')
+
+# Clean up 'nan' strings that strftime creates from empty cells
+combined_frog_df.loc[combined_frog_df['start_time'] == 'nan', 'start_time'] = None
+```
+
+```{python}
+# End time column
+
+# Convert to string and strip the '.0' from the end of numbers
+combined_frog_df['end_time'] = (
+    combined_frog_df['end_time']
+    .astype(str)
+    .str.replace(r'\.0$', '', regex=True)
+    .str.strip()
+)
+
+# For 3 or 4 digit numbers (like 739 or 1939), ensure they are padded with a leading zero and formatted with a colon (e.g., '07:39' or '19:39')
+mask_military = combined_frog_df['end_time'].str.match(r'^\d{3,4}$')
+combined_frog_df.loc[mask_military, 'end_time'] = (
+    combined_frog_df.loc[mask_military, 'end_time']
+    .str.zfill(4)
+    .str.replace(r'(\d{2})(\d{2})', r'\1:\2', regex=True)
+)
+
+# Convert and format in one step to avoid the AttributeError
+combined_frog_df['end_time'] = pd.to_datetime(combined_frog_df['end_time'], errors='coerce').dt.strftime('%H:%M')
+
+# Clean up 'nan' strings that strftime creates from empty cells
+combined_frog_df.loc[combined_frog_df['end_time'] == 'nan', 'end_time'] = None
+```
+
+```{python}
+# Monitored column
+
+import numpy as np
+
+# Rename it to exactly 'monitored'
+combined_frog_df.rename(columns={'monitored_(y/n)': 'monitored'}, inplace=True)
+
+# Clean the values
+# We convert to lowercase and strip whitespace to catch 'Y ', 'y', ' n', etc.
+combined_frog_df['monitored'] = combined_frog_df['monitored'].astype(str).str.lower().str.strip()
+
+# Map the values to Booleans or None
+mapping = {
+    'y': True,
+    'yes': True,
+    'n': False,
+    'no': False
+}
+
+combined_frog_df['monitored'] = combined_frog_df['monitored'].map(mapping).replace({np.nan: None})
+```
+
+15. We will convert all the frog count columns to numeric values (integers). We will also fill any missing values with 0, since a missing value in a count column likely means that no frogs were observed. This is confirmed by looking at the original Excel files, where empty cells in the count columns correspond to 0 frogs observed.
+
+```{python}
+frog_count_cols = [
+    'females_assisted_down',
+    'females_assisted_up',
+    'females_unassisted_down',
+    'females_unassisted_up',
+    'juveniles_assisted_up',
+    'males_assisted_down',
+    'males_assisted_up',
+    'males_unassisted_down',
+    'males_unassisted_up',
+    'roadkills_female',
+    'roadkills_male',
+    'roadkills_unk',
+    'total_frogs_assisted_down',
+    'total_frogs_assisted_up',
+    'total_frogs_down',
+    'total_frogs_up',
+    'total_assisted',
+    'total_live_frogs'
+]
+
+for col in frog_count_cols:
+    if col in combined_frog_df.columns:
+        # Force everything to be a number; text like '-' becomes NaN
+        combined_frog_df[col] = pd.to_numeric(combined_frog_df[col], errors='coerce')
+        
+        # Fill the new NaNs (and the old empty cells) with 0, then convert to integer
+        combined_frog_df[col] = combined_frog_df[col].fillna(0).astype(int)
+```
+
+16. Finally, we will reorder the columns in a logical way. We want the date and time columns to be at the front, followed by the location and weather conditions, and then the frog counts.
+
+```{python}
+# Specify the exact order you want
+new_order = [
+    'date', 
+    'sunset', 
+    'civil_twilight', 
+    'captain', 
+    'monitored', 
+    'start_time', 
+    'end_time', 
+    'hours_monitored', 
+    'team_hours', 
+    'start_temp', 
+    'end_temp', 
+    'weather',
+    'females_assisted_down',
+    'females_assisted_up',
+    'females_unassisted_down',
+    'females_unassisted_up',
+    'juveniles_assisted_up',
+    'males_assisted_down',
+    'males_assisted_up',
+    'males_unassisted_down',
+    'males_unassisted_up',
+    'roadkills_female',
+    'roadkills_male',
+    'roadkills_unk',
+    'total_frogs_assisted_down',
+    'total_frogs_assisted_up',
+    'total_frogs_down',
+    'total_frogs_up',
+    'total_assisted',
+    'total_live_frogs',
+    'notes'
+]
+
+# Apply the new order
+combined_frog_df = combined_frog_df[new_order]
+```
+
+17. Now that the data is clean, we can save it to a new CSV file for use in our analysis.
+
+```{python}
 combined_frog_df.to_csv('combined_frog_data.csv', index=False)
 ```
