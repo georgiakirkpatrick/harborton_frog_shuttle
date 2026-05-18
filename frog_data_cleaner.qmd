@@ -30,6 +30,7 @@ frog_data/frog_log_2025_26.xlsx
 ```{python}
 import os
 import pandas as pd
+import numpy as np
 
 directory = './frog_data'
 all_data = []
@@ -402,6 +403,7 @@ combined_frog_df.drop(columns=cols_to_drop, inplace=True)
 
 Date columns should be in datetime format, time columns should be in HH:MM format, and numeric columns should be in integer or float format.
 
+Date column
 ```{python}
 #Date column
 
@@ -411,6 +413,8 @@ combined_frog_df['date'] = pd.to_datetime(combined_frog_df['date'], errors='coer
 # Extract just the date
 combined_frog_df['date'] = combined_frog_df['date'].dt.date
 ```
+
+Sunset column
 
 ```{python}
 # Sunset column
@@ -444,6 +448,8 @@ combined_frog_df['sunset'] = pd.to_datetime(
 combined_frog_df.loc[combined_frog_df['sunset'] == '00:00', 'sunset'] = None
 ```
 
+Civil twilight column
+
 ```{python}
 # Civil twilight column
 
@@ -476,6 +482,8 @@ combined_frog_df['civil_twilight'] = pd.to_datetime(
 combined_frog_df.loc[combined_frog_df['civil_twilight'] == '00:00', 'civil_twilight'] = None
 ```
 
+Start time column
+
 ```{python}
 # Start time column
 
@@ -502,6 +510,8 @@ combined_frog_df['start_time'] = pd.to_datetime(combined_frog_df['start_time'], 
 # Clean up 'nan' strings that strftime creates from empty cells
 combined_frog_df.loc[combined_frog_df['start_time'] == 'nan', 'start_time'] = None
 ```
+
+End time column
 
 ```{python}
 # End time column
@@ -531,8 +541,6 @@ combined_frog_df.loc[combined_frog_df['end_time'] == 'nan', 'end_time'] = None
 
 ```{python}
 # Monitored column
-
-import numpy as np
 
 # Rename it to exactly 'monitored'
 combined_frog_df.rename(columns={'monitored_(y/n)': 'monitored'}, inplace=True)
@@ -627,7 +635,84 @@ new_order = [
 combined_frog_df = combined_frog_df[new_order]
 ```
 
-17. Now that the data is clean, we can save it to a new CSV file for use in our analysis.
+17. Now that the columns are in a logical order, we can perform some final cleaning on the temperature columns. We will ensure they are numeric, check for any values that are likely in Celsius and convert them to Fahrenheit, and handle any outliers (e.g., values above 80 or below 20 degrees Fahrenheit, which are unlikely for this region and time of year).
+
+```{python}
+# Ensure temperature columns are numeric
+temp_cols = ['start_temp', 'end_temp']
+for col in temp_cols:
+    combined_frog_df[col] = pd.to_numeric(combined_frog_df[col], errors='coerce')
+
+# Celsius Check & Conversion (0 to 15 degrees)
+# We assume values in this range are Celsius and convert to Fahrenheit
+for col in temp_cols:
+    celsius_mask = (combined_frog_df[col] >= 0) & (combined_frog_df[col] <= 15)
+    # Conversion formula: (C * 1.8) + 32
+    combined_frog_df.loc[celsius_mask, col] = (combined_frog_df.loc[celsius_mask, col] * 1.8) + 32
+
+# Handle Outliers (above 80 or below 20) as they are likely to be typos.
+for col in temp_cols:
+    outlier_mask = (combined_frog_df[col] > 80) | (combined_frog_df[col] < 20)
+    combined_frog_df.loc[outlier_mask, col] = np.nan
+```
+
+18. Double check that columns tracking frog movements add up.
+
+```{python}
+# Define the component columns for each direction
+males_down = ['males_assisted_down', 'males_unassisted_down']
+females_down = ['females_assisted_down', 'females_unassisted_down']
+# Note: There are no juveniles_down in our current dataset, but we'll check just in case
+juv_down = [c for c in combined_frog_df.columns if 'juvenile' in c.lower() and 'down' in c.lower()]
+
+males_up = ['males_assisted_up', 'males_unassisted_up']
+females_up = ['females_assisted_up', 'females_unassisted_up']
+juv_up = ['juveniles_assisted_up']
+
+# Calculate the "Calculated Totals" from component parts
+combined_frog_df['calc_total_down'] = combined_frog_df[males_down + females_down + juv_down].sum(axis=1)
+combined_frog_df['calc_total_up'] = combined_frog_df[males_up + females_up + juv_up].sum(axis=1)
+
+# Create Master Columns: Trust components, fallback to reported totals if components are 0
+combined_frog_df['total_frogs_down'] = np.where(
+    combined_frog_df['calc_total_down'] > 0, 
+    combined_frog_df['calc_total_down'], 
+    combined_frog_df['total_frogs_down']
+)
+
+combined_frog_df['total_frogs_up'] = np.where(
+    combined_frog_df['calc_total_up'] > 0, 
+    combined_frog_df['calc_total_up'], 
+    combined_frog_df['total_frogs_up']
+)
+
+# Enforce the equations
+# Equation: total_live_frogs = total_frogs_down + total_frogs_up
+combined_frog_df['total_live_frogs'] = combined_frog_df['total_frogs_down'] + combined_frog_df['total_frogs_up']
+
+# Equation: total_assisted = (females_assisted_down + males_assisted_down + 
+#                             females_assisted_up + males_assisted_up + juveniles_assisted_up)
+assisted_cols = [
+    'females_assisted_down', 'males_assisted_down', 
+    'females_assisted_up', 'males_assisted_up', 'juveniles_assisted_up'
+]
+combined_frog_df['total_assisted'] = combined_frog_df[assisted_cols].sum(axis=1)
+
+# Equation: total_frogs_assisted_down = females_assisted_down + males_assisted_down
+combined_frog_df['total_frogs_assisted_down'] = combined_frog_df[['females_assisted_down', 'males_assisted_down']].sum(axis=1)
+
+# Equation: total_frogs_assisted_up = females_assisted_up + males_assisted_up + juveniles_assisted_up
+combined_frog_df['total_frogs_assisted_up'] = combined_frog_df[['females_assisted_up', 'males_assisted_up', 'juveniles_assisted_up']].sum(axis=1)
+
+# Final check: ensure everything is an integer (whole number)
+reconciled_cols = [
+    'total_frogs_down', 'total_frogs_up', 'total_live_frogs', 
+    'total_assisted', 'total_frogs_assisted_down', 'total_frogs_assisted_up'
+]
+combined_frog_df[reconciled_cols] = combined_frog_df[reconciled_cols].fillna(0).astype(int)
+```
+
+Now that the data is clean, we can save it to a new CSV file for use in our analysis.
 
 ```{python}
 combined_frog_df.to_csv('combined_frog_data.csv', index=False)
