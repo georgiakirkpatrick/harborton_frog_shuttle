@@ -16,3 +16,9 @@ frog_data_cleaner_files/
 # Data files
 *.csv
 frog_data/
+
+# Ignore everything inside the folder
+frog_data/*
+
+# Except for the hidden placeholder file
+!frog_data/.gitkeep
