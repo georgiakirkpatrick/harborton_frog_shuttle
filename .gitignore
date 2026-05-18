@@ -1,0 +1,18 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Jupyter & Notebook checkpoints
+.ipynb_checkpoints/
+
+# Excel temporary lock files
+~$*.xlsx
+**/~$*
+
+# Quarto/Jupyter HTML output and supporting assets
+frog_data_cleaner.html
+frog_data_cleaner_files/
+
+# Data files
+*.csv
+frog_data/
